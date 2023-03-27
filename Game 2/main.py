@@ -13,13 +13,21 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("asteroids")
 
 # Load assets
-spaceship_img = pygame.image.load('assets/spaceship.png')
+
 asteroid_img = pygame.image.load('assets/asteroid.png').convert_alpha()
 game_over_img = pygame.image.load('assets/game_over.png')
 game_over_img = pygame.transform.scale(game_over_img, (WIDTH, HEIGHT))
 shoot_sound = pygame.mixer.Sound('assets/laser.mp3')
 background_img = pygame.image.load('assets/gamebackground.jpg')
 background_img = pygame.transform.scale(background_img, (WIDTH, HEIGHT))
+
+spaceship_images = [
+    pygame.image.load('assets/spaceships/spaceship.png'),
+    pygame.image.load('assets/spaceships/spaceship2.png'),
+    pygame.image.load('assets/spaceships/spaceship3.png'),
+    pygame.image.load('assets/spaceships/spaceship4.png')
+]
+
 
 game_over_font = pygame.font.Font(None, 50)
 background_music = 'assets/music.mp3'
@@ -61,7 +69,68 @@ class Spaceship(pygame.sprite.Sprite):
             self.rect.left = 0
         if self.rect.right > WIDTH:
             self.rect.right = WIDTH
+            
+def opening_screen():
+    background_img = pygame.image.load('background2.png')
+    background_img = pygame.transform.scale(background_img, (WIDTH, HEIGHT))
+    font_title = pygame.font.Font(None, 80)
+    font_prompt = pygame.font.Font(None, 40)
+    title_text = font_title.render("", True, (255, 255, 255))
+    prompt_text = font_prompt.render("Press Enter To Start Game", True, (255, 255, 255))
 
+    screen.blit(background_img, (0, 0))
+    screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 3))
+    screen.blit(prompt_text, (WIDTH // 2 - prompt_text.get_width() // 2, HEIGHT // 2))
+
+    pygame.display.flip()
+
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYUP:
+                waiting = False
+
+def character_selector():
+    global spaceship_img
+    screen.fill((0, 0, 0))
+    font_prompt = pygame.font.Font(None, 40)
+    prompt_text = font_prompt.render("Select a Character", True, (255, 255, 255))
+    screen.blit(prompt_text, (WIDTH // 2 - prompt_text.get_width() // 2, HEIGHT // 2))
+
+    for i, spaceship_image in enumerate(spaceship_images, 1):
+        scaled_image = pygame.transform.scale(spaceship_image, (100, 100))
+        x = WIDTH // 5 * i - scaled_image.get_width() // 2
+        y = HEIGHT // 2 + 50
+        screen.blit(scaled_image, (x, y))
+        num_text = score_font.render(str(i), True, (255, 255, 255))
+        screen.blit(num_text, (x + scaled_image.get_width() // 2 - num_text.get_width() // 2, y + 110))
+
+    pygame.display.flip()
+
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYUP:
+                if event.key in (pygame.K_1, pygame.K_KP1):
+                    spaceship_img = spaceship_images[0]
+                    waiting = False
+                elif event.key in (pygame.K_2, pygame.K_KP2):
+                    spaceship_img = spaceship_images[1]
+                    waiting = False
+                elif event.key in (pygame.K_3, pygame.K_KP3):
+                    spaceship_img = spaceship_images[2]
+                    waiting = False
+                elif event.key in (pygame.K_4, pygame.K_KP4):
+                    spaceship_img = spaceship_images[3]
+                    waiting = False
+
+    
 class Projectile(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
@@ -93,6 +162,8 @@ class Asteroid(pygame.sprite.Sprite):
 
 # game objects
 all_sprites = pygame.sprite.Group()
+opening_screen() 
+character_selector()
 spaceship = Spaceship()
 all_sprites.add(spaceship)
 projectiles = pygame.sprite.Group()
@@ -103,31 +174,6 @@ for _ in range(8):
     all_sprites.add(asteroid)
     asteroids.add(asteroid)
 
-def opening_screen():
-    background_img = pygame.image.load('assets/frontscreen.png')
-    background_img = pygame.transform.scale(background_img, (WIDTH, HEIGHT))
-    font_title = pygame.font.Font(None, 80)
-    font_prompt = pygame.font.Font(None, 40)
-    title_text = font_title.render("", True, (255, 255, 255))
-    prompt_text = font_prompt.render("Press any key to start", True, (255, 255, 255))
-
-    screen.blit(background_img, (0, 0))
-    screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 3))
-    screen.blit(prompt_text, (WIDTH // 2 - prompt_text.get_width() // 2, HEIGHT // 2))
-
-    pygame.display.flip()
-
-    waiting = True
-    while waiting:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.KEYUP:
-                waiting = False
-
-
-opening_screen()
 
 # Game loop
 running = True
@@ -167,7 +213,6 @@ while running:
             spaceship.kill()
             pygame.mixer.music.stop()
             game_over_sound.play()
-
 
     if game_over:
         screen.blit(game_over_img, (WIDTH // 2 - game_over_img.get_width() // 2, HEIGHT // 2 - game_over_img.get_height() // 2))
